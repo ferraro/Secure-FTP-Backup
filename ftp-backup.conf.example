@@ -5,7 +5,8 @@ ftp_host=hostname
 ftp_port=21
 ftp_user=user
 ftp_password=password
-ftp_quota=100GB
+# Quota is defined in bytes
+ftp_quota=100000000000
 
 # Backup directories and how to backup them
 backup_dirs=/home/user1;/home/user2
@@ -17,3 +18,4 @@ archive=/usr/bin/tar
 # Use as compressor bzip2 or gzip
 compressor=/usr/bin/bzip2
 encryption=/usr/bin/gpg
+encryption_name=Secure FTP Backup

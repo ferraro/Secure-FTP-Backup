@@ -18,7 +18,8 @@ ftp_host=hostname
 ftp_port=21
 ftp_user=user
 ftp_password=password
-ftp_quota=100GB
+# Quota is defined in bytes
+ftp_quota=100000000000
 
 # Backup directories with their absolute paths
 # Multiple directories can be written with semicolons ';'
@@ -31,11 +32,12 @@ archive=/usr/bin/tar
 # Use as compressor bzip2 or gzip
 compressor=/usr/bin/bzip2
 encryption=/usr/bin/gpg
+encryption_name=Secure FTP Backup
 
 HOW TO USE IT
 -------------
 Run as root:
-$ ftp-backup.php mybackup.conf
+$ ftp-backup.php /etc/ftp-backup.conf
 
 Simply add this in your cronjob file:
 crontab:
@@ -48,8 +50,58 @@ REQUIREMENTS
 - ftp command line tool
 - tar command line tool
 - gzip/bzip2 command line tool
+- awk
 - FTP server access
 - UNIX compatible operating system
+
+INSTALLATION
+------------
+1. Configure the encryption by creating a new GnuPG secret and public key:
+$ gpg --gen-key
+a) Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
+b) Use no passphrase as we want to encrypt data automatically wihout typing manually a password
+c) As full name choose for example "Secure FTP Backup", as the backup script will match exactly this name of encryption_name configuration field
+d) For the email address, you can put yours if you like, its not mandatory
+
+After the configuration, check that your key has been created:
+$ gpg --list-key
+/Users/saf/.gnupg/pubring.gpg
+-----------------------------
+pub   1024D/0FD9E71F 2013-12-25
+uid                  Secure FTP Backup <contact@ferraro.net>
+sub   4096g/2B362D79 2013-12-25
+
+2. Copy script file to /usr/local/bin/ftp-backup.php
+3. Copy and configure the configuration file at /etc/ftp-backup.conf
+4. Try if it works by executing as root:
+$ ftp-backup.php /etc/ftp-backup.conf
+5. Add a crontab entry in /etc/crontab:
+# Secure FTP Backup
+0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
+6. Restart cron:
+$ /etc/init.d/cron restart
+
+You can check your /var/log/syslog log file to see if the script runned successfully.
+
+DECRYPTING & UNCOMPRESSING ARCHIVES
+-----------------------------------
+1. Log on the FTP server, download the encrypted compressed archived file.
+2. Decrypt, uncompress and unarchive it:
+a) For gzip archives:
+$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.bz2.gpg | gzip -dc | tar xfzv -
+b) For bzip2 archives:
+$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.bz2.gpg | bzip2 -dc | tar xfzv -
+
+The output of GnuPG would be similar to that:
+gpg: encrypted with 4096-bit ELG-E key, ID 2B362D79, created 2013-12-25
+      "Secure FTP Backup <contact@ferraro.net>"
+gpg: Signature made Wed Dec 25 22:03:31 2013 CET using DSA key ID 0FD9E71F
+gpg: Good signature from "Secure FTP Backup <contact@ferraro.net>"
+
+NOTE
+----
+The script can not parse sub directories of the FTP service to count the taken quota space.
+It can only count the bytes of the file which are in the main directory of the backup FTP service.
 
 LICENSE
 -------

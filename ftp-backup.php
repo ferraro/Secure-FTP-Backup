@@ -11,15 +11,16 @@
 class ftp_backup
 {
 	var $host;
-	var $port = 21;
+	var $port			= 21;
 	var $user;
 	var $password;
 	var $quota;
-	var $backupDirList = array();
+	var $backupDirList	= array();
 	var $prefix;
 	var $archive;
 	var $compressor;
 	var $encryption;
+	var $backupFilename;
 	
 	public function setHost($param) {
 		$this->host = $param;
@@ -73,17 +74,41 @@ class ftp_backup
 			$suffix = '.bz2';
 		}
 
-		$filename	= '/tmp/'.$this->prefix.$date.'.tar'.$suffix;
+		$filename				= '/tmp/'.$this->prefix.$date.'.tar'.$suffix;
+		$this->backupFilename	= $filename;
 		fprintf(STDERR, "Create backup file $filename\n");
 
 		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$this->compressor.' -9 > '.$filename;
 		fprintf(STDERR, "Execute: $cmd\n");
 		system($cmd);
 	}
+	
+	private function _encrypt() {
+		fprintf(STDERR, "Encrypt file ".$this->backupFilename."\n");
+		system($this->encryption.' -esr "Secure FTP Backup" '.$this->backupFilename);
+	}
+	
+	private function _ftpTakenSpaceInBytes() {
+		// Get bytes of all files on the FTP server in the main directory
+		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo ls; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 5 | /usr/bin/awk \'{s+=$1} END {print s}\'';
+		return rtrim(`$cmd`);
+	}
 
 	public function run() {
 		date_default_timezone_set('UTC');
+		// Backups should not be possible to be readen by another user than the user which is
+		// running this script.
+		umask(0177);
 		$this->_compressDirectories();
+		$this->_encrypt();
+		
+		// Now check if there is enough free space on the FTP server, if not we need to delete
+		// the oldest files
+		$ftpTakenSpace	= $this->_ftpTakenSpaceInBytes();
+		$percent		= ($ftpTakenSpace / $this->quota * 100);
+
+		fprintf(STDERR, "FTP account takes currently $ftpTakenSpace of ".$this->quota." bytes (%02.02f%%)\n", $percent);
 	}
 }
 
