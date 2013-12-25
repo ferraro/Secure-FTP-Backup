@@ -1,0 +1,13 @@
+# Secure FTP Backup Configuration File
+
+# FTP host settings
+ftp_host=hostname
+ftp_port=port
+ftp_user=user
+ftp_password=password
+ftp_quota=100GB
+
+# Backup directories and how to backup them
+backup_dir=/home/user1;/home/user2
+compressor=bzip2 # or "gzip" if wished
+gpg=/usr/bin/gpg
