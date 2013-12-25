@@ -16,43 +16,74 @@ class ftp_backup
 	var $password;
 	var $quota;
 	var $backupDirList = array();
+	var $prefix;
+	var $archive;
 	var $compressor;
 	var $encryption;
 	
 	public function setHost($param) {
-		$host = $param;
+		$this->host = $param;
 	}
 	
 	public function setPort($param) {
-		$port = (int)$param;
+		$this->port = (int)$param;
 	}
 	
 	public function setUser($param) {
-		$user = $param;
+		$this->user = $param;
 	}
 	
 	public function setPassword($param) {
-		$password = $param;
+		$this->password = $param;
 	}
 	
 	public function setQuota($param) {
-		$quota = $param;
+		$this->quota = $param;
 	}
 	
 	public function setBackupDir($paramList) {
-		$backupDirList = $paramList;
+		$this->backupDirList = $paramList;
+	}
+	
+	public function setPrefix($param) {
+		$this->prefix = $param;
+	}
+
+	public function setArchive($param) {
+		$this->archive = $param;
 	}
 	
 	public function setCompressor($param) {
-		$compressor = $param;
+		$this->compressor = $param;
 	}
 	
 	public function setEncryption($param) {
-		$encryption = $param;
+		$this->encryption = $param;
+	}
+	
+	private function _compressDirectories() {
+		$tarDirs	= implode($this->backupDirList, ' ');
+		// Remove first / as we will tar from /
+		$tarDirs	= ltrim($tarDirs, '/');
+		$date		= date("Ymd_G:i:s");
+		
+		$suffix		= '.gz';
+		if (strstr($this->compressor, 'bzip2')) {
+			// If gzip is not used, then only bzip is allowed, so choose .bz2 as suffix
+			$suffix = '.bz2';
+		}
+
+		$filename	= '/tmp/'.$this->prefix.$date.'.tar'.$suffix;
+		fprintf(STDERR, "Create backup file $filename\n");
+
+		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$this->compressor.' -9 > '.$filename;
+		fprintf(STDERR, "Execute: $cmd\n");
+		system($cmd);
 	}
 
 	public function run() {
-		
+		date_default_timezone_set('UTC');
+		$this->_compressDirectories();
 	}
 }
 
@@ -92,6 +123,12 @@ while ($line = fgets($fp)) {
 			case 'backup_dirs':
 				$dirList = explode(';', $value);
 				$backup->setBackupDir($dirList);
+				break;
+			case 'prefix':
+				$backup->setPrefix($value);
+				break;
+			case 'archive':
+				$backup->setArchive($value);
 				break;
 			case 'compressor':
 				$backup->setCompressor($value);

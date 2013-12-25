@@ -20,8 +20,14 @@ ftp_user=user
 ftp_password=password
 ftp_quota=100GB
 
-# Backup directories and how to backup them
+# Backup directories with their absolute paths
+# Multiple directories can be written with semicolons ';'
 backup_dirs=/home/user1;/home/user2
+
+# Prefix for the backup file names
+prefix=backup_
+
+archive=/usr/bin/tar
 # Use as compressor bzip2 or gzip
 compressor=/usr/bin/bzip2
 encryption=/usr/bin/gpg

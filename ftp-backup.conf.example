@@ -9,6 +9,11 @@ ftp_quota=100GB
 
 # Backup directories and how to backup them
 backup_dirs=/home/user1;/home/user2
+
+# Prefix for the backup file names
+prefix=backup_
+
+archive=/usr/bin/tar
 # Use as compressor bzip2 or gzip
 compressor=/usr/bin/bzip2
 encryption=/usr/bin/gpg
