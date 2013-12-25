@@ -20,6 +20,7 @@ class ftp_backup
 	var $archive;
 	var $compressor;
 	var $encryption;
+	var $encryptionName;
 	var $backupFilename;
 	
 	public function setHost($param) {
@@ -61,6 +62,10 @@ class ftp_backup
 	public function setEncryption($param) {
 		$this->encryption = $param;
 	}
+
+	public function setEncryptionName($param) {
+			$this->encryptionName = $param;
+	}
 	
 	private function _compressDirectories() {
 		$tarDirs	= implode($this->backupDirList, ' ');
@@ -85,14 +90,17 @@ class ftp_backup
 	
 	private function _encrypt() {
 		fprintf(STDERR, "Encrypt file ".$this->backupFilename."\n");
-		system($this->encryption.' -esr "Secure FTP Backup" '.$this->backupFilename);
+		$cmd = $this->encryption.' -es -r "'.$this->encryptionName.'" -u "'.$this->encryptionName.'" '.$this->backupFilename;
+		fprintf(STDERR, "Execute: $cmd\n");
+		system($cmd);
 	}
 	
 	private function _ftpTakenSpaceInBytes() {
 		// Get bytes of all files on the FTP server in the main directory
+		fprintf(STDERR, "Get from FTP server free space information\n");
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo ls; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 5 | /usr/bin/awk \'{s+=$1} END {print s}\'';
-		return rtrim(`$cmd`);
+		return (float)rtrim(`$cmd`);
 	}
 
 	public function run() {
@@ -125,7 +133,6 @@ if (count( $GLOBALS['argv']) !== 2) {
 $fp = @fopen($GLOBALS['argv'][1], 'r') or die("Can't open configuration file '".$GLOBALS['argv'][1]."'.\n");
 while ($line = fgets($fp)) {
 	$line = rtrim($line);
-	$line = str_replace(' ', '', $line);
 
 	if (strlen($line) > 0 && $line[0] != '#') {
 		list($key, $value) = explode('=', $line);
@@ -161,6 +168,9 @@ while ($line = fgets($fp)) {
 			case 'encryption':
 				$backup->setEncryption($value);
 				break;
+			case 'encryption_name':
+				$backup->setEncryptionName($value);
+				break;	
 
 			default:
 				die("Unknown key: '$key' in configuration file '".$GLOBALS['argv'][1]."'.\n");
