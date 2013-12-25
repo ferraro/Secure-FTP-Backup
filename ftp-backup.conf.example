@@ -2,12 +2,13 @@
 
 # FTP host settings
 ftp_host=hostname
-ftp_port=port
+ftp_port=21
 ftp_user=user
 ftp_password=password
 ftp_quota=100GB
 
 # Backup directories and how to backup them
-backup_dir=/home/user1;/home/user2
-compressor=bzip2 # or "gzip" if wished
-gpg=/usr/bin/gpg
+backup_dirs=/home/user1;/home/user2
+# Use as compressor bzip2 or gzip
+compressor=/usr/bin/bzip2
+encryption=/usr/bin/gpg

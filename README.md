@@ -2,38 +2,42 @@ Secure-FTP-Backup
 =================
 
 Create secure high encrypted FTP backups.
-This PHP script creates backups which are encrypted with GnuPG and then sent to a FTP server.
+This script creates backups which are encrypted with GnuPG and then sent to a FTP server.
 It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space.
 
 EXAMPLE HOW TO USE IT
 =====================
 
-CONFIGURATION
--------------
+CONFIGURATION EXAMPLE FILE
+--------------------------
 ftp-backup.conf:
+# Secure FTP Backup Configuration File
+
 # FTP host settings
 ftp_host=hostname
-ftp_port=port
+ftp_port=21
 ftp_user=user
 ftp_password=password
 ftp_quota=100GB
 
 # Backup directories and how to backup them
-backup_dir=/home/user1;/home/user2
-compressor=bzip2 # or "gzip" if wished
-gpg=/usr/bin/gpg
+backup_dirs=/home/user1;/home/user2
+# Use as compressor bzip2 or gzip
+compressor=/usr/bin/bzip2
+encryption=/usr/bin/gpg
 
 HOW TO USE IT
 -------------
-$ ftp-backup -c mybackup.conf
+Run as root:
+$ ftp-backup.php mybackup.conf
 
 Simply add this in your cronjob file:
 crontab:
-0 5 * * * root /usr/local/bin/ftp-backup -c /etc/ftp-backup.conf > /dev/null 2>&1
+0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
 REQUIREMENTS
 ------------
-- PHP
+- PHP 5
 - GnuPG
 - ftp command line tool
 - tar command line tool
@@ -43,7 +47,7 @@ REQUIREMENTS
 
 LICENSE
 -------
-MIT
+The MIT License (MIT)
 
 AUTHOR
 ------
