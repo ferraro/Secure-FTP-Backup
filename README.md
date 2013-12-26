@@ -12,6 +12,7 @@ CONFIGURATION EXAMPLE FILE
 ==========================
 
 ftp-backup.conf file:
+
 	# Secure FTP Backup Configuration File
 	
 	# FTP host settings
@@ -44,10 +45,12 @@ HOW TO USE IT
 =============
 
 Run as root:
-$ ftp-backup.php /etc/ftp-backup.conf
+
+	$ ftp-backup.php /etc/ftp-backup.conf
 
 Simply add this in your cronjob file:
 crontab:
+
 	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
 REQUIREMENTS
@@ -75,7 +78,8 @@ e) Backup your private GPG key on a secure place (it would not be your FTP backu
 $ gpg --export-secret-keys
 
 After the configuration, check that your key has been created:
-$ gpg --list-key
+
+	$ gpg --list-key
 	/Users/saf/.gnupg/pubring.gpg
 	-----------------------------
 	pub   1024D/0FD9E71F 2013-12-25
@@ -109,6 +113,7 @@ b) For bzip2 archives:
 $ gpg -d /tmp/backup_20131225_21\:03\:31.tar.bz2.gpg | bzip2 -dc | tar xfzv -
 
 The output of GnuPG would be similar to that:
+
 	gpg: encrypted with 4096-bit ELG-E key, ID 2B362D79, created 2013-12-25
 	      "Secure FTP Backup <contact@ferraro.net>"
 	gpg: Signature made Wed Dec 25 22:03:31 2013 CET using DSA key ID 0FD9E71F
