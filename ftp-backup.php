@@ -21,6 +21,8 @@ class ftp_backup
 	var $encryption;
 	var $encryptionName;
 	var $backupFilename;
+	var $LOCKFILE = '/tmp/ftp-backup.lock';
+	var $lockfileFp;
 	
 	public function setHost($param) {
 		$this->host = $param;
@@ -105,16 +107,49 @@ class ftp_backup
 	
 	private function _uploadFileToFTP() {
 		fprintf(STDERR, "Upload $this->backupFilename file to FTP server\n");
+		$singleFileName	= basename($this->backupFilename);
+		$dirPath		= dirname($this->backupFilename);
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo put '.$this->backupFilename.'; echo quit) | /usr/bin/ftp -n';
+				"; echo lcd $dirPath; echo put $singleFileName; echo quit) | /usr/bin/ftp -nv";
 		system($cmd);
 	}
 	
+	public function ftpLs() {
+		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n';
+		system($cmd);
+	}
+	
+	private function _lockProcess() {
+		$this->lockfileFp = fopen($this->LOCKFILE, 'r+');
+
+		if (!flock($this->lockfileFp, LOCK_EX)) { // exklusive Sperre
+		   fprintf(STDERR,
+					$GLOBALS['argv'][0].
+					": Could not lock $this->LOCKFILE file. Another backup process is currently running.\n");
+		}
+	}
+
+	private function _unlockProcess() {
+		// Tell operating system to delete file as soon as possible
+		unlink($this->lockfileFp);
+		// Unlock file
+		flock($this->lockfileFp, LOCK_UN);
+		// On UNIX a file is really deleted when its last file descriptor is closed.
+		fclose($this->lockfileFp);
+	}
+
 	public function run() {
+		// Lock process
+		$this->_lockProcess();
+		
+		$startTime = time();
+		
 		date_default_timezone_set('UTC');
 		// Backups should not be possible to be readen by another user than the user which is
 		// running this script.
 		umask(0177);
+
 		$this->_archiveDirectories();
 
 		// Now check if there is enough free space on the FTP server, if not we need to delete
@@ -151,6 +186,13 @@ class ftp_backup
 		
 		// Delete temporary file
 		unlink($this->backupFilename);
+		
+		// Unlock process
+		$this->_unlockProcess();
+		$totalTime	= time() - $startTime;
+		$info		= "Backup complete of ".basename($this->backupFilename)." ($fileSize bytes) in $totalTime seconds.";
+		syslog(LOG_INFO, $info);
+		fprintf(STDERR, $info."\n");
 	}
 }
 
@@ -158,8 +200,9 @@ class ftp_backup
 $backup = new ftp_backup();
 
 // Check program arguments
-if (count( $GLOBALS['argv']) !== 2) {
+if (count($GLOBALS['argv']) !== 2 && count($GLOBALS['argv']) !== 3) {
 	fprintf(STDERR, "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf\n");
+	fprintf(STDERR, "or: ".$GLOBALS['argv'][0]." ftp-backup.conf ls\n");
 	exit(1);
 }
 
@@ -210,4 +253,8 @@ while ($line = fgets($fp)) {
 }
 fclose($fp);
 
-$backup->run();
+if (count($GLOBALS['argv']) === 3) {
+	$backup->ftpLs();
+} else {
+	$backup->run();	
+}
