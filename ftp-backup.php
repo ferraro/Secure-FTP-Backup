@@ -18,7 +18,6 @@ class ftp_backup
 	var $backupDirList	= array();
 	var $prefix;
 	var $archive;
-	var $compressor;
 	var $encryption;
 	var $encryptionName;
 	var $backupFilename;
@@ -55,10 +54,6 @@ class ftp_backup
 		$this->archive = $param;
 	}
 	
-	public function setCompressor($param) {
-		$this->compressor = $param;
-	}
-	
 	public function setEncryption($param) {
 		$this->encryption = $param;
 	}
@@ -67,34 +62,22 @@ class ftp_backup
 			$this->encryptionName = $param;
 	}
 	
-	private function _compressDirectories() {
+	private function _archiveDirectories() {
 		$tarDirs	= implode($this->backupDirList, ' ');
 		// Remove first / as we will tar from /
 		$tarDirs	= ltrim($tarDirs, '/');
 		$date		= date("Ymd_G:i:s");
-		
-		$suffix		= '.gz';
-		if (strstr($this->compressor, 'bzip2')) {
-			// If gzip is not used, then only bzip is allowed, so choose .bz2 as suffix
-			$suffix = '.bz2';
-		}
 
-		$filename				= '/tmp/'.$this->prefix.$date.'.tar'.$suffix;
+		$filename				= '/tmp/'.$this->prefix.$date.'.tar.gpg';
 		$this->backupFilename	= $filename;
 		fprintf(STDERR, "Create backup file $filename\n");
 
-		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$this->compressor.' -9 > '.$filename;
+		$encryptionCmd = $this->encryption.' -es -r "'.$this->encryptionName.'" -u "'.$this->encryptionName.'" -';
+		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$encryptionCmd.' > '.$filename;
 		fprintf(STDERR, "Execute: $cmd\n");
 		system($cmd);
 	}
-	
-	private function _encrypt() {
-		fprintf(STDERR, "Encrypt file ".$this->backupFilename."\n");
-		$cmd = $this->encryption.' -es -r "'.$this->encryptionName.'" -u "'.$this->encryptionName.'" '.$this->backupFilename;
-		fprintf(STDERR, "Execute: $cmd\n");
-		system($cmd);
-	}
-	
+
 	private function _ftpTakenSpaceInBytes() {
 		// Get bytes of all files on the FTP server in the main directory
 		fprintf(STDERR, "Get from FTP server free space information\n");
@@ -103,20 +86,41 @@ class ftp_backup
 		return (float)rtrim(`$cmd`);
 	}
 
+	private function _purgeFTPSpace() {
+		// Get oldest file name in the main directory, then delete it
+		// Files in sub directories will not be purged
+		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 9 | head -n 1';
+		$oldestFileName = rtrim(`$cmd`);
+		print "$oldestFileName\n";
+		exit(1);
+	}
+	
 	public function run() {
 		date_default_timezone_set('UTC');
 		// Backups should not be possible to be readen by another user than the user which is
 		// running this script.
 		umask(0177);
-		$this->_compressDirectories();
-		$this->_encrypt();
-		
+		$this->_archiveDirectories();
+
 		// Now check if there is enough free space on the FTP server, if not we need to delete
 		// the oldest files
 		$ftpTakenSpace	= $this->_ftpTakenSpaceInBytes();
 		$percent		= ($ftpTakenSpace / $this->quota * 100);
 
 		fprintf(STDERR, "FTP account takes currently $ftpTakenSpace of ".$this->quota." bytes (%02.02f%%)\n", $percent);
+		
+		$statList	= lstat($this->backupFilename);
+		$size		= $statList['size'];
+		
+		// Check if file size is bigger than FTP quota
+		if ($size + $ftpTakenSpace > $this->quota) {
+			fprintf(STDERR, "FTP space is full, purging files to get free space\n");
+			while ($size + $ftpTakenSpace > $this->quota) {
+				// Purge FTP space as long there is enough space free by deleting files which are the oldest
+				$this->_purgeFTPSpace();
+			}	
+		}
 	}
 }
 
@@ -162,13 +166,10 @@ while ($line = fgets($fp)) {
 			case 'archive':
 				$backup->setArchive($value);
 				break;
-			case 'compressor':
-				$backup->setCompressor($value);
-				break;
 			case 'encryption':
 				$backup->setEncryption($value);
 				break;
-			case 'encryption_name':
+			case 'encryption_key_name':
 				$backup->setEncryptionName($value);
 				break;	
 

@@ -3,7 +3,10 @@ Secure-FTP-Backup
 
 Create secure high encrypted FTP backups.
 This script creates backups which are encrypted with GnuPG and then sent to a FTP server.
+It should be used if you place your backups on an unsecure FTP server (for example on a FTP host of your ISP).
+As the backups are already encrypted on the server, you don't need to worry if the backups are unsecurely transfered (FTP instead FTPS).
 It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space.
+As default encryption software GnuPG will be used which automatically compress the tar archive file.
 
 EXAMPLE HOW TO USE IT
 =====================
@@ -29,10 +32,8 @@ backup_dirs=/home/user1;/home/user2
 prefix=backup_
 
 archive=/usr/bin/tar
-# Use as compressor bzip2 or gzip
-compressor=/usr/bin/bzip2
 encryption=/usr/bin/gpg
-encryption_name=Secure FTP Backup
+encryption_key_name=Secure FTP Backup
 
 HOW TO USE IT
 -------------
@@ -59,9 +60,11 @@ INSTALLATION
 1. Configure the encryption by creating a new GnuPG secret and public key:
 $ gpg --gen-key
 a) Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
-b) Use no passphrase as we want to encrypt data automatically wihout typing manually a password
+b) Use a passphrase which you would need to decrypt your data
 c) As full name choose for example "Secure FTP Backup", as the backup script will match exactly this name of encryption_name configuration field
 d) For the email address, you can put yours if you like, its not mandatory
+e) Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
+$ gpg --export-secret-keys
 
 After the configuration, check that your key has been created:
 $ gpg --list-key
