@@ -3,9 +3,9 @@ Secure-FTP-Backup
 
 Create secure high encrypted FTP backups.
 This script creates backups which are encrypted with GnuPG and are then sent to a FTP server.
-It should be used if you place your backups on an unsecure FTP server (for example on a FTP host of your ISP).
+It should be used if you place your backups on an unsecure FTP server.
 As the backups are already encrypted on the server, you don't need to worry if the backups are unsecurely transfered (FTP instead FTPS).
-It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space.
+It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space available.
 As default encryption software GnuPG will be used which automatically compress the archived files.
 
 CONFIGURATION EXAMPLE FILE
@@ -20,7 +20,7 @@ ftp-backup.conf file:
 	ftp_port=21
 	ftp_user=user
 	ftp_password=password
-	# Quota is defined in bytes
+	# Maximum available space on the remote FTP server (defined in bytes)
 	ftp_quota=100000000000
 	
 	# Backup directories with their absolute paths
@@ -48,8 +48,7 @@ Run as root:
 
 	$ ftp-backup.php /etc/ftp-backup.conf
 
-Simply add this in your cronjob file:
-crontab:
+Simply add this in your cronjob file /etc/crontab:
 
 	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
@@ -75,7 +74,7 @@ Configure the encryption by creating a new GnuPG secret and public key:
 - Use a passphrase which you would need to decrypt your data
 - As full name choose for example "Secure FTP Backup - yourhostname.tld", as the backup script will match exactly this name of encryption_name configuration field
 - For the email address, you can put yours if you like, its not mandatory
-- Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
+- Backup your private GPG key on a secure place (it should not be your FTP backup space server). Use the command:
 
 	$ gpg --export-secret-keys
 
@@ -108,7 +107,7 @@ Restart cron:
 
 	$ /etc/init.d/cron restart
 
-You can check your /var/log/syslog log file to see if the script runned successfully.
+You can check your /var/log/syslog log file to see if the script executed successfully.
 
 DECRYPTING & EXTRACTING
 -----------------------
@@ -129,7 +128,12 @@ NOTE
 ----
 
 The script can not parse sub directories of the FTP service to count the taken quota space.
-It can only count the bytes of the file which are in the main directory of the backup FTP service.
+It can only count the bytes of the files which are in the main directory of the backup FTP service.
+
+VERSION
+-------
+
+1.0
 
 LICENSE
 -------
@@ -139,4 +143,4 @@ The MIT License (MIT)
 AUTHOR
 ------
 
-Stephan Ferraro
+Stephan Ferraro <contact@ferraro.net>, created December 2013 at Germany.
