@@ -60,7 +60,6 @@ REQUIREMENTS
 - GnuPG
 - ftp command line tool
 - tar command line tool
-- gzip/bzip2 command line tool
 - awk
 - FTP server access
 - UNIX compatible operating system
@@ -69,13 +68,15 @@ INSTALLATION
 ============
 
 1. Configure the encryption by creating a new GnuPG secret and public key:
-$ gpg --gen-key
+
+	$ gpg --gen-key
 a) Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
 b) Use a passphrase which you would need to decrypt your data
 c) As full name choose for example "Secure FTP Backup - yourhostname.tld", as the backup script will match exactly this name of encryption_name configuration field
 d) For the email address, you can put yours if you like, its not mandatory
 e) Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
-$ gpg --export-secret-keys
+
+	$ gpg --export-secret-keys
 
 After the configuration, check that your key has been created:
 
@@ -87,30 +88,33 @@ After the configuration, check that your key has been created:
 	sub   4096g/2B362D79 2013-12-25
 
 2. Copy script file to /usr/local/bin/ftp-backup.php:
-$ cp ftp-backup.php /usr/local/bin
+
+	$ cp ftp-backup.php /usr/local/bin
 And set file to be executable:
-$ chmod 755 /usr/local/bin/ftp-backup.php
+
+	$ chmod 755 /usr/local/bin/ftp-backup.php
 
 3. Copy and configure the configuration file at /etc/ftp-backup.conf
 4. Try if it works by executing as root:
-$ ftp-backup.php /etc/ftp-backup.conf
+
+	$ ftp-backup.php /etc/ftp-backup.conf
 5. Add a crontab entry in /etc/crontab:
-# Secure FTP Backup
-0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
+
+	# Secure FTP Backup
+	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 6. Restart cron:
-$ /etc/init.d/cron restart
+
+	$ /etc/init.d/cron restart
 
 You can check your /var/log/syslog log file to see if the script runned successfully.
 
-DECRYPTING & UNCOMPRESSING ARCHIVES
-===================================
+DECRYPTING & EXTRACTING ARCHIVES
+================================
 
 1. Log on the FTP server, download the encrypted compressed archived file.
 2. Decrypt, uncompress and unarchive it:
-a) For gzip archives:
-$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.bz2.gpg | gzip -dc | tar xfzv -
-b) For bzip2 archives:
-$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.bz2.gpg | bzip2 -dc | tar xfzv -
+
+	$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.gpg | tar xfv -
 
 The output of GnuPG would be similar to that:
 
