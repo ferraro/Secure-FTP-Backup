@@ -31,9 +31,16 @@ backup_dirs=/home/user1;/home/user2
 # Prefix for the backup file names
 prefix=backup_
 
-archive=/usr/bin/tar
-encryption=/usr/bin/gpg
+# GnuPG encryption settings
+encryption_cmd=/usr/bin/gpg
 encryption_key_name=Secure FTP Backup
+
+# Mandatory programs
+ftp_cmd=/usr/bin/ftp
+cut_cmd=/usr/bin/cut
+awk_cmd=/usr/bin/awk
+archive_cmd=/bin/tar
+
 
 HOW TO USE IT
 -------------

@@ -10,6 +10,7 @@
 // FTP backup class
 class ftp_backup
 {
+	var $VERSION		= '1.0';
 	var $host;
 	var $port			= 21;
 	var $user;
@@ -20,9 +21,12 @@ class ftp_backup
 	var $archive;
 	var $encryption;
 	var $encryptionName;
-	var $backupFilename;
+	var $ftpCmd;
+	var $cutCmd;
+	var $awkCmd;
 	var $LOCKFILE = '/tmp/ftp-backup.lock';
 	var $lockfileFp;
+	var $backupFilename;
 	
 	public function setHost($param) {
 		$this->host = $param;
@@ -52,6 +56,18 @@ class ftp_backup
 		$this->prefix = $param;
 	}
 
+	public function setFTPCmd($param) {
+		$this->ftpCmd = $param;
+	}
+
+	public function setCutCmd($param) {
+		$this->cutCmd = $param;
+	}
+
+	public function setAwkCmd($param) {
+		$this->awkCmd = $param;
+	}
+
 	public function setArchive($param) {
 		$this->archive = $param;
 	}
@@ -62,6 +78,11 @@ class ftp_backup
 
 	public function setEncryptionName($param) {
 			$this->encryptionName = $param;
+	}
+	
+	public function logAndDie() {
+		syslog(LOG_ALERT, 'Fatal error. FTP backup has failed. Please try to run it manually.');
+		exit(1);
 	}
 	
 	private function _archiveDirectories() {
@@ -84,14 +105,14 @@ class ftp_backup
 		// Get bytes of all files on the FTP server in the main directory
 		fprintf(STDERR, "Get from FTP server free space information\n");
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 5 | /usr/bin/awk \'{s+=$1} END {print s}\'';
+				'; echo ls; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 5 | '.$this->awkCmd.' \'{s+=$1} END {print s}\'';
 		return (float)rtrim(`$cmd`);
 	}
 
 	private function _deleteFileOnFTP($filename) {
 		fprintf(STDERR, "Delete $filename file on remote FTP server\n");
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo delete '.$filename.'; echo quit) | /usr/bin/ftp -n';
+				'; echo delete '.$filename.'; echo quit) | '.$this->ftpCmd.' -n';
 		system($cmd);
 	}
 	
@@ -99,10 +120,10 @@ class ftp_backup
 		// Get oldest file name in the main directory, then delete it
 		// Files in sub directories will not be purged
 		$cmd = '((echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 9 | head -n 1) 2>/dev/null';
+				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 9 | head -n 1) 2>/dev/null';
 		$oldestFileName = rtrim(`$cmd`);
 		$this->_deleteFileOnFTP($oldestFileName);
-		exit(1);
+		$this->logAndDie();
 	}
 	
 	private function _uploadFileToFTP() {
@@ -110,18 +131,18 @@ class ftp_backup
 		$singleFileName	= basename($this->backupFilename);
 		$dirPath		= dirname($this->backupFilename);
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				"; echo lcd $dirPath; echo put $singleFileName; echo quit) | /usr/bin/ftp -nv";
+				"; echo lcd $dirPath; echo put $singleFileName; echo quit) | $this->ftpCmd -nv";
 		system($cmd);
 	}
 	
 	public function ftpLs() {
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n';
+				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n';
 		system($cmd);
 	}
 	
 	private function _lockProcess() {
-		$this->lockfileFp = fopen($this->LOCKFILE, 'r+');
+		$this->lockfileFp = fopen($this->LOCKFILE, 'a');
 
 		if (!flock($this->lockfileFp, LOCK_EX)) { // exklusive Sperre
 		   fprintf(STDERR,
@@ -132,11 +153,52 @@ class ftp_backup
 
 	private function _unlockProcess() {
 		// Tell operating system to delete file as soon as possible
-		unlink($this->lockfileFp);
+		unlink($this->LOCKFILE);
 		// Unlock file
 		flock($this->lockfileFp, LOCK_UN);
 		// On UNIX a file is really deleted when its last file descriptor is closed.
 		fclose($this->lockfileFp);
+	}
+	
+	public function validate() {
+		// Validate all parameters and give auto-suggestion if somehting is wrong
+		$validateList = array(
+			'host'				=>	'ftp_host',
+			'port'				=>	'ftp_port',
+			'user'				=>	'ftp_user',
+			'password'			=>	'ftp_password',
+			'quota'				=>	'ftp_quota',
+			'prefix'			=>	'prefix',
+			'backupDirList'		=>	'backup_dirs',
+			'archive'			=>	'archive_cmd',
+			'encryption'		=>	'encryption_cmd',
+			'encryptionName'	=>	'encryption_key_name',
+			'ftpCmd'			=>	'ftp_cmd',
+			'cutCmd'			=>	'cut_cmd',
+			'awkCmd'			=>	'awk_cmd'
+		);
+		foreach ($validateList as $internalVariable => $configurationParameter) {
+			if (empty($this->$internalVariable)) {
+				fprintf(STDERR, "'$configurationParameter' parameter not set in configuration file ".$GLOBALS['argv'][1]."\n");
+				$this->logAndDie();
+			}
+		}
+		
+		// Check executables
+		$validateList = array(
+			'archive'			=>	'archive_cmd',
+			'encryption'		=>	'encryption_cmd',
+			'ftpCmd'			=>	'ftp_cmd',
+			'cutCmd'			=>	'cut_cmd',
+			'awkCmd'			=>	'awk_cmd'
+		);
+		foreach ($validateList as $internalVariable => $configurationParameter) {
+			$filename = $this->$internalVariable;
+			if (!file_exists($filename)) {
+				fprintf(STDERR, "'$configurationParameter' parameter with ".$this->$internalVariable." not found in ".$GLOBALS['argv'][1]."\n");
+				$this->logAndDie();
+			}
+		}	
 	}
 
 	public function run() {
@@ -168,7 +230,7 @@ class ftp_backup
 					$GLOBALS['argv'][0].
 					": Fatal error: File size of backup ($fileSize bytes) is bigger than full available space on FTP server (".
 					$this->quota." bytes)\n");
-			exit(1);
+			$this->logAndDie();
 		}
 
 		if ($fileSize + $ftpTakenSpace > $this->quota) {
@@ -199,11 +261,19 @@ class ftp_backup
 // Main
 $backup = new ftp_backup();
 
+function usage($backup)
+{
+	fprintf(STDERR, "Secure FTP Backup - (C) Stephan Ferraro 2013 - Version ".$backup->VERSION."\n");
+	fprintf(STDERR, "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf [ls]\n");
+	exit(1);	
+}
+
 // Check program arguments
 if (count($GLOBALS['argv']) !== 2 && count($GLOBALS['argv']) !== 3) {
-	fprintf(STDERR, "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf\n");
-	fprintf(STDERR, "or: ".$GLOBALS['argv'][0]." ftp-backup.conf ls\n");
-	exit(1);
+	usage($backup);
+}
+if (count($GLOBALS['argv']) === 3 && $GLOBALS['argv'][2] !== 'ls') {
+	usage($backup);
 }
 
 // Parse configuration file
@@ -212,6 +282,10 @@ while ($line = fgets($fp)) {
 	$line = rtrim($line);
 
 	if (strlen($line) > 0 && $line[0] != '#') {
+		if (strstr($line, '=') === false) {
+			fprintf(STDERR, "Error in configuration file '".$GLOBALS['argv'][1]."'. Invalid line: $line\n");
+			$backup->logAndDie();
+		}
 		list($key, $value) = explode('=', $line);
 		switch ($key) {
 			case 'ftp_host':
@@ -236,10 +310,19 @@ while ($line = fgets($fp)) {
 			case 'prefix':
 				$backup->setPrefix($value);
 				break;
-			case 'archive':
+			case 'ftp_cmd':
+				$backup->setFTPCmd($value);
+				break;
+			case 'cut_cmd':
+				$backup->setCutCmd($value);
+				break;
+			case 'awk_cmd':
+				$backup->setAwkCmd($value);
+				break;				
+			case 'archive_cmd':
 				$backup->setArchive($value);
 				break;
-			case 'encryption':
+			case 'encryption_cmd':
 				$backup->setEncryption($value);
 				break;
 			case 'encryption_key_name':
@@ -252,6 +335,9 @@ while ($line = fgets($fp)) {
 	}
 }
 fclose($fp);
+
+// Check if all parameters are correct
+$backup->validate();
 
 if (count($GLOBALS['argv']) === 3) {
 	$backup->ftpLs();
