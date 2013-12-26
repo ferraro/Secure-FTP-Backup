@@ -101,7 +101,7 @@ Try if it works by executing as root:
 
 Add a crontab entry in /etc/crontab:
 	
-	\# Secure FTP Backup
+	# Secure FTP Backup
 	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
 Restart cron:
