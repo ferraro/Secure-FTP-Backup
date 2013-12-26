@@ -72,7 +72,7 @@ class ftp_backup
 		$this->backupFilename	= $filename;
 		fprintf(STDERR, "Create backup file $filename\n");
 
-		$encryptionCmd = $this->encryption.' -es -r "'.$this->encryptionName.'" -u "'.$this->encryptionName.'" -';
+		$encryptionCmd = $this->encryption.' -e -r "'.$this->encryptionName.'" -';
 		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$encryptionCmd.' > '.$filename;
 		fprintf(STDERR, "Execute: $cmd\n");
 		system($cmd);
