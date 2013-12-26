@@ -49,7 +49,11 @@ class ftp_backup
 	}
 	
 	public function setBackupDir($paramList) {
-		$this->backupDirList = $paramList;
+		$list = array();
+		foreach ($paramList as $param) {
+			$list[]= ltrim($param, '/');
+		}
+		$this->backupDirList = $list;
 	}
 	
 	public function setPrefix($param) {
@@ -86,9 +90,8 @@ class ftp_backup
 	}
 	
 	private function _archiveDirectories() {
+		// TODO: remove all / of the beginning directories
 		$tarDirs	= implode($this->backupDirList, ' ');
-		// Remove first / as we will tar from /
-		$tarDirs	= ltrim($tarDirs, '/');
 		$date		= date("Ymd_G:i:s");
 
 		$filename				= '/tmp/'.$this->prefix.$date.'.tar.gpg';

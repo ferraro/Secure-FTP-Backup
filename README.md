@@ -2,11 +2,11 @@ Secure-FTP-Backup
 =================
 
 Create secure high encrypted FTP backups.
-This script creates backups which are encrypted with GnuPG and then sent to a FTP server.
+This script creates backups which are encrypted with GnuPG and are then sent to a FTP server.
 It should be used if you place your backups on an unsecure FTP server (for example on a FTP host of your ISP).
 As the backups are already encrypted on the server, you don't need to worry if the backups are unsecurely transfered (FTP instead FTPS).
 It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space.
-As default encryption software GnuPG will be used which automatically compress the tar archive file.
+As default encryption software GnuPG will be used which automatically compress the archived files.
 
 EXAMPLE HOW TO USE IT
 =====================
@@ -29,11 +29,11 @@ ftp_quota=100000000000
 backup_dirs=/home/user1;/home/user2
 
 # Prefix for the backup file names
-prefix=backup_
+prefix=yourhostname.tld_backup_
 
 # GnuPG encryption settings
 encryption_cmd=/usr/bin/gpg
-encryption_key_name=Secure FTP Backup
+encryption_key_name=Secure FTP Backup - yourhostname.tld
 
 # Mandatory programs
 ftp_cmd=/usr/bin/ftp
@@ -68,7 +68,7 @@ INSTALLATION
 $ gpg --gen-key
 a) Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
 b) Use a passphrase which you would need to decrypt your data
-c) As full name choose for example "Secure FTP Backup", as the backup script will match exactly this name of encryption_name configuration field
+c) As full name choose for example "Secure FTP Backup - yourhostname.tld", as the backup script will match exactly this name of encryption_name configuration field
 d) For the email address, you can put yours if you like, its not mandatory
 e) Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
 $ gpg --export-secret-keys
@@ -78,10 +78,14 @@ $ gpg --list-key
 /Users/saf/.gnupg/pubring.gpg
 -----------------------------
 pub   1024D/0FD9E71F 2013-12-25
-uid                  Secure FTP Backup <contact@ferraro.net>
+uid                  Secure FTP Backup <name@email.tld>
 sub   4096g/2B362D79 2013-12-25
 
-2. Copy script file to /usr/local/bin/ftp-backup.php
+2. Copy script file to /usr/local/bin/ftp-backup.php:
+$ cp ftp-backup.php /usr/local/bin
+And set file to be executable:
+$ chmod 755 /usr/local/bin/ftp-backup.php
+
 3. Copy and configure the configuration file at /etc/ftp-backup.conf
 4. Try if it works by executing as root:
 $ ftp-backup.php /etc/ftp-backup.conf

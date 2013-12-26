@@ -8,14 +8,19 @@ ftp_password=password
 # Quota is defined in bytes
 ftp_quota=100000000000
 
-# Backup directories and how to backup them
+# Backup directories with their absolute paths
+# Multiple directories can be written with semicolons ';'
 backup_dirs=/home/user1;/home/user2
 
 # Prefix for the backup file names
-prefix=backup_
+prefix=yourhostname.tld_backup_
 
-archive=/usr/bin/tar
-# Use as compressor bzip2 or gzip
-compressor=/usr/bin/bzip2
-encryption=/usr/bin/gpg
-encryption_name=Secure FTP Backup
+# GnuPG encryption settings
+encryption_cmd=/usr/bin/gpg
+encryption_key_name=Secure FTP Backup - yourhostname.tld
+
+# Mandatory programs
+ftp_cmd=/usr/bin/ftp
+cut_cmd=/usr/bin/cut
+awk_cmd=/usr/bin/awk
+archive_cmd=/bin/tar
