@@ -143,4 +143,4 @@ The MIT License (MIT)
 AUTHOR
 ------
 
-Stephan Ferraro - email: contact@ferraro.net - created December 2013 at Germany
+Stephan Ferraro - email: contact@ferraro.net - created in december 2013 at Germany
