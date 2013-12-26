@@ -9,7 +9,7 @@ It checks too if there is still enough space free on the FTP server. If not it d
 As default encryption software GnuPG will be used which automatically compress the archived files.
 
 CONFIGURATION EXAMPLE FILE
-==========================
+--------------------------
 
 ftp-backup.conf file:
 
@@ -42,7 +42,7 @@ ftp-backup.conf file:
 
 
 HOW TO USE IT
-=============
+-------------
 
 Run as root:
 
@@ -54,7 +54,7 @@ crontab:
 	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
 REQUIREMENTS
-============
+------------
 
 - PHP 5
 - GnuPG
@@ -65,7 +65,7 @@ REQUIREMENTS
 - UNIX compatible operating system
 
 INSTALLATION
-============
+------------
 
 1. Configure the encryption by creating a new GnuPG secret and public key:
 
@@ -108,8 +108,8 @@ And set file to be executable:
 
 You can check your /var/log/syslog log file to see if the script runned successfully.
 
-DECRYPTING & EXTRACTING ARCHIVES
-================================
+DECRYPTING & EXTRACTING
+-----------------------
 
 1. Log on the FTP server, download the encrypted compressed archived file.
 2. Decrypt, uncompress and unarchive it:
@@ -124,17 +124,17 @@ The output of GnuPG would be similar to that:
 	gpg: Good signature from "Secure FTP Backup <contact@ferraro.net>"
 
 NOTE
-====
+----
 
 The script can not parse sub directories of the FTP service to count the taken quota space.
 It can only count the bytes of the file which are in the main directory of the backup FTP service.
 
 LICENSE
-=======
+-------
 
 The MIT License (MIT)
 
 AUTHOR
-======
+------
 
 Stephan Ferraro
