@@ -98,7 +98,12 @@ class ftp_backup
 		$encryptionCmd = $this->encryption.' -e -r "'.$this->encryptionName.'" -';
 		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$encryptionCmd.' > '.$filename;
 		fprintf(STDERR, "Execute: $cmd\n");
-		system($cmd);
+		$returnVar = 0;
+		system($cmd, $returnVar);
+		if ($returnVar) {
+			fprintf(STDERR, "Fatal error: GnuPG encryption failed\n");
+			$this->logAndDie();
+		}
 	}
 
 	private function _ftpTakenSpaceInBytes() {
