@@ -86,14 +86,28 @@ class ftp_backup
 		return (float)rtrim(`$cmd`);
 	}
 
+	private function _deleteFileOnFTP($filename) {
+		fprintf(STDERR, "Delete $filename file on remote FTP server\n");
+		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo delete '.$filename.'; echo quit) | /usr/bin/ftp -n';
+		system($cmd);
+	}
+	
 	private function _purgeFTPSpace() {
 		// Get oldest file name in the main directory, then delete it
 		// Files in sub directories will not be purged
-		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 9 | head -n 1';
+		$cmd = '((echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo ls -lrt; echo quit) | /usr/bin/ftp -n | tr -s \' \' | /usr/bin/cut -d \' \' -f 9 | head -n 1) 2>/dev/null';
 		$oldestFileName = rtrim(`$cmd`);
-		print "$oldestFileName\n";
+		$this->_deleteFileOnFTP($oldestFileName);
 		exit(1);
+	}
+	
+	private function _uploadFileToFTP() {
+		fprintf(STDERR, "Upload $this->backupFilename file to FTP server\n");
+		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+				'; echo put '.$this->backupFilename.'; echo quit) | /usr/bin/ftp -n';
+		system($cmd);
 	}
 	
 	public function run() {
@@ -111,16 +125,32 @@ class ftp_backup
 		fprintf(STDERR, "FTP account takes currently $ftpTakenSpace of ".$this->quota." bytes (%02.02f%%)\n", $percent);
 		
 		$statList	= lstat($this->backupFilename);
-		$size		= $statList['size'];
+		$fileSize	= $statList['size'];
 		
-		// Check if file size is bigger than FTP quota
-		if ($size + $ftpTakenSpace > $this->quota) {
+		// Check if file size is bigger than full available FTP quota
+		if ($fileSize > $this->quota) {
+			fprintf(STDERR,
+					$GLOBALS['argv'][0].
+					": Fatal error: File size of backup ($fileSize bytes) is bigger than full available space on FTP server (".
+					$this->quota." bytes)\n");
+			exit(1);
+		}
+
+		if ($fileSize + $ftpTakenSpace > $this->quota) {
 			fprintf(STDERR, "FTP space is full, purging files to get free space\n");
-			while ($size + $ftpTakenSpace > $this->quota) {
+			while ($fileSize + $ftpTakenSpace > $this->quota) {
 				// Purge FTP space as long there is enough space free by deleting files which are the oldest
 				$this->_purgeFTPSpace();
-			}	
+				// Fetch new free space of FTP server
+				$ftpTakenSpace	= $this->_ftpTakenSpaceInBytes();
+			}
 		}
+		
+		// There is enough space on the FTP server, upload file
+		$this->_uploadFileToFTP();
+		
+		// Delete temporary file
+		unlink($this->backupFilename);
 	}
 }
 
@@ -129,7 +159,7 @@ $backup = new ftp_backup();
 
 // Check program arguments
 if (count( $GLOBALS['argv']) !== 2) {
-	echo "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf\n";
+	fprintf(STDERR, "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf\n");
 	exit(1);
 }
 
