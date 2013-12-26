@@ -90,19 +90,18 @@ After the configuration, check that your key has been created:
 	uid                  Secure FTP Backup <name@email.tld>
 	sub   4096g/2B362D79 2013-12-25
 
-- Copy script file to /usr/local/bin/ftp-backup.php:
-
+- Copy script file to /usr/local/bin/ftp-backup.php and set file to be executable:
+	
 	$ cp ftp-backup.php /usr/local/bin
-And set file to be executable:
-
 	$ chmod 755 /usr/local/bin/ftp-backup.php
 
 - Copy and configure the configuration file at /etc/ftp-backup.conf
 - Try if it works by executing as root:
-
+	
 	$ ftp-backup.php /etc/ftp-backup.conf
-- Add a crontab entry in /etc/crontab:
 
+- Add a crontab entry in /etc/crontab:
+	
 	# Secure FTP Backup
 	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
 
