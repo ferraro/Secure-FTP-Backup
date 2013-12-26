@@ -67,15 +67,15 @@ REQUIREMENTS
 INSTALLATION
 ------------
 
-- Configure the encryption by creating a new GnuPG secret and public key:
+Configure the encryption by creating a new GnuPG secret and public key:
 	
 	$ gpg --gen-key
 
-a) Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
-b) Use a passphrase which you would need to decrypt your data
-c) As full name choose for example "Secure FTP Backup - yourhostname.tld", as the backup script will match exactly this name of encryption_name configuration field
-d) For the email address, you can put yours if you like, its not mandatory
-e) Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
+Choose 4096 bits key length, to have today the strongest possible key length, as your key could not be cracked so early in future as compute power is increasing all the time.
+Use a passphrase which you would need to decrypt your data
+As full name choose for example "Secure FTP Backup - yourhostname.tld", as the backup script will match exactly this name of encryption_name configuration field
+For the email address, you can put yours if you like, its not mandatory
+Backup your private GPG key on a secure place (it would not be your FTP backup space server). Use the command:
 
 	$ gpg --export-secret-keys
 
