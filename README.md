@@ -50,7 +50,7 @@ Run as root:
 
 Simply add this in your cronjob file /etc/crontab:
 
-	0 5 * * * root /usr/local/bin/ftp-backup.php -c /etc/ftp-backup.conf > /dev/null 2>&1
+	0 5 * * * root /usr/local/bin/ftp-backup.php /etc/ftp-backup.conf > /dev/null 2>&1
 
 REQUIREMENTS
 ------------
