@@ -81,12 +81,12 @@ Configure the encryption by creating a new GnuPG secret and public key:
 
 After the configuration, check that your key has been created:
 
-	$ gpg --list-key
-	/Users/saf/.gnupg/pubring.gpg
-	-----------------------------
-	pub   1024D/0FD9E71F 2013-12-25
-	uid                  Secure FTP Backup <name@email.tld>
-	sub   4096g/2B362D79 2013-12-25
+	# gpg --list-key
+	/root/.gnupg/pubring.gpg
+	------------------------
+	pub   4096R/CEB34505 2013-12-26
+	uid                  Secure FTP Backup - host.domain.tld <email@domain.tld>
+	sub   4096R/B9B80850 2013-12-26
 
 Copy script file to /usr/local/bin/ftp-backup.php and set file to be executable:
 	
@@ -115,14 +115,12 @@ DECRYPTING & EXTRACTING
 Log on the FTP server, download the encrypted compressed archived file.
 Decrypt, uncompress and unarchive it:
 
-	$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.gpg | tar xfv -
+	$ gpg -d /tmp/backup_20131225_21\:03\:31.tar.gpg | tar xfv -
 
 The output of GnuPG would be similar to that:
 
 	gpg: encrypted with 4096-bit ELG-E key, ID 2B362D79, created 2013-12-25
-	      "Secure FTP Backup <contact@ferraro.net>"
-	gpg: Signature made Wed Dec 25 22:03:31 2013 CET using DSA key ID 0FD9E71F
-	gpg: Good signature from "Secure FTP Backup <contact@ferraro.net>"
+	      "Secure FTP Backup <email@domain.tld>"
 
 NOTE
 ----
