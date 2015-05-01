@@ -90,9 +90,11 @@ After the configuration, check that your key has been created:
 	sub   4096R/B9B80850 2013-12-26
 
 Copy the public key of this key on your server where you would like to backup your files:
+
         $ gpg --armor --export 'Secure FTP Backup - yourhostname.tld' > backup_yourhostname.tld.pub
 
 Import the key on your server where you would like to backup your files:
+
         $ gpg --import < backup_yourhostname.tld.pub
 
 Copy script file to /usr/local/bin/ftp-backup.php and set file to be executable:
