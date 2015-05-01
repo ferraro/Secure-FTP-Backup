@@ -93,9 +93,14 @@ Copy the public key of this key on your server where you would like to backup yo
 
         $ gpg --armor --export 'Secure FTP Backup - yourhostname.tld' > yourhostname.tld.pub
 
-Import the key on your server where you would like to backup your files:
+Import the key on your server where you would like to backup your files. Trust this key.
 
         $ gpg --import < yourhostname.tld.pub
+	$ gpg --edit-key 'Secure FTP Backup - yourhostname.tld'
+	trust
+	Your decision? 5
+	Do you really want to set this key to ultimate trust? (y/N) y
+	quit
 
 Copy script file to /usr/local/bin/ftp-backup.php and set file to be executable:
 	
