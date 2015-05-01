@@ -7,6 +7,7 @@ It should be used if you place your backups on an unsecure FTP server.
 As the backups are already encrypted on the server, you don't need to worry if the backups are unsecurely transfered (FTP instead FTPS).
 It checks too if there is still enough space free on the FTP server. If not it deletes the oldest files that there is exactly enough space available.
 As default encryption software GnuPG will be used which automatically compress the archived files.
+It can too backuping a full root / filesystem.
 
 CONFIGURATION EXAMPLE FILE
 --------------------------
@@ -131,7 +132,7 @@ It can only count the bytes of the files which are in the main directory of the 
 VERSION
 -------
 
-1.0
+1.1
 
 LICENSE
 -------

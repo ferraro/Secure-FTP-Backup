@@ -99,7 +99,8 @@ class ftp_backup
 		fprintf(STDERR, "Create backup file $filename\n");
 
 		$encryptionCmd = $this->encryption.' -e -r "'.$this->encryptionName.'" -';
-		$cmd = 'cd /; '.$this->archive.' cf - '.$tarDirs.' | '.$encryptionCmd.' > '.$filename;
+		// Be able to TAR a whole root file system / by not taring other file systems like e.g. /proc
+		$cmd = 'cd /; '.$this->archive.' cf - --exclude='.$filename.' --one-file-system '.$tarDirs.' | '.$encryptionCmd.' > '.$filename;
 		fprintf(STDERR, "Execute: $cmd\n");
 		$returnVar = 0;
 		system($cmd, $returnVar);
