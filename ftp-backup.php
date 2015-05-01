@@ -255,6 +255,7 @@ class ftp_backup
 		$this->_uploadFileToFTP();
 		
 		// Delete temporary file
+		fprintf(STDERR, "Delete temporary backup file %s\n", $this->backupFilename);
 		unlink($this->backupFilename);
 		
 		// Unlock process
