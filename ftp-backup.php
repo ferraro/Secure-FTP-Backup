@@ -51,7 +51,11 @@ class ftp_backup
 	public function setBackupDir($paramList) {
 		$list = array();
 		foreach ($paramList as $param) {
-			$list[]= ltrim($param, '/');
+			if ($param !== '/') {
+				// Remove beginning / if not backuping a full root / filesystem
+				$param = ltrim($param, '/');
+			}
+			$list[]= $param;
 		}
 		$this->backupDirList = $list;
 	}
@@ -90,7 +94,6 @@ class ftp_backup
 	}
 	
 	private function _archiveDirectories() {
-		// TODO: remove all / of the beginning directories
 		$tarDirs	= implode($this->backupDirList, ' ');
 		$date		= date("Ymd_G:i:s");
 
