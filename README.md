@@ -97,10 +97,10 @@ Import the key on your server where you would like to backup your files. Trust t
 
         $ gpg --import < yourhostname.tld.pub
 	$ gpg --edit-key 'Secure FTP Backup - yourhostname.tld'
-	trust
+	gpg> trust
 	Your decision? 5
 	Do you really want to set this key to ultimate trust? (y/N) y
-	quit
+	gpg> quit
 
 Copy script file to /usr/local/bin/ftp-backup.php and set file to be executable:
 	
