@@ -125,7 +125,12 @@ class ftp_backup
 		fprintf(STDERR, "Delete $filename file on remote FTP server\n");
 		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo delete '.$filename.'; echo quit) | '.$this->ftpCmd.' -n';
-		system($cmd);
+		$returnVar = 0;
+		system($cmd, $returnVar);
+		if ($returnVar) {
+			fprintf(STDERR, "Fatal error: Could not delete file on FTP server\n");
+			$this->logAndDie();
+		}
 	}
 	
 	private function _purgeFTPSpace() {
@@ -135,7 +140,6 @@ class ftp_backup
 				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 9 | head -n 1) 2>/dev/null';
 		$oldestFileName = rtrim(`$cmd`);
 		$this->_deleteFileOnFTP($oldestFileName);
-		$this->logAndDie();
 	}
 	
 	private function _uploadFileToFTP() {
