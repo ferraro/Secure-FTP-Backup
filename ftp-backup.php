@@ -117,7 +117,7 @@ class ftp_backup
 		// Get bytes of all files on the FTP server in the main directory
 		fprintf(STDERR, "Get from FTP server free space information\n");
 		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 5 | '.$this->awkCmd.' \'{s+=$1} END {print s}\'';
+				'; echo ls; echo quit) | '.$this->ftpCmd.' -n | grep -v \'Passive mode on.\' | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 5 | '.$this->awkCmd.' \'{s+=$1} END {print s}\'';
 		return (float)rtrim(`$cmd`);
 	}
 
@@ -137,7 +137,7 @@ class ftp_backup
 		// Get oldest file name in the main directory, then delete it
 		// Files in sub directories will not be purged
 		$cmd = '((echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 9 | head -n 1) 2>/dev/null';
+				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | grep -v \'Passive mode on.\' | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 9 | head -n 1) 2>/dev/null';
 		$oldestFileName = rtrim(`$cmd`);
 		$this->_deleteFileOnFTP($oldestFileName);
 	}
@@ -153,7 +153,7 @@ class ftp_backup
 	
 	public function ftpLs() {
 		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
-				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n';
+				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | grep -v \'Passive mode on.\'';
 		system($cmd);
 	}
 	
