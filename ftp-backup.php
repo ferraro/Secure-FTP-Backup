@@ -116,14 +116,14 @@ class ftp_backup
 	private function _ftpTakenSpaceInBytes() {
 		// Get bytes of all files on the FTP server in the main directory
 		fprintf(STDERR, "Get from FTP server free space information\n");
-		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo ls; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 5 | '.$this->awkCmd.' \'{s+=$1} END {print s}\'';
 		return (float)rtrim(`$cmd`);
 	}
 
 	private function _deleteFileOnFTP($filename) {
 		fprintf(STDERR, "Delete $filename file on remote FTP server\n");
-		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo delete '.$filename.'; echo quit) | '.$this->ftpCmd.' -n';
 		$returnVar = 0;
 		system($cmd, $returnVar);
@@ -136,7 +136,7 @@ class ftp_backup
 	private function _purgeFTPSpace() {
 		// Get oldest file name in the main directory, then delete it
 		// Files in sub directories will not be purged
-		$cmd = '((echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+		$cmd = '((echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n | tr -s \' \' | '.$this->cutCmd.' -d \' \' -f 9 | head -n 1) 2>/dev/null';
 		$oldestFileName = rtrim(`$cmd`);
 		$this->_deleteFileOnFTP($oldestFileName);
@@ -146,13 +146,13 @@ class ftp_backup
 		fprintf(STDERR, "Upload $this->backupFilename file to FTP server\n");
 		$singleFileName	= basename($this->backupFilename);
 		$dirPath		= dirname($this->backupFilename);
-		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				"; echo lcd $dirPath; echo put $singleFileName; echo quit) | $this->ftpCmd -nv";
 		system($cmd);
 	}
 	
 	public function ftpLs() {
-		$cmd = '(echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
+		$cmd = '(echo passive; echo open '.$this->host.' '.$this->port.'; echo user '.$this->user.' '.$this->password.
 				'; echo ls -lrt; echo quit) | '.$this->ftpCmd.' -n';
 		system($cmd);
 	}
@@ -282,7 +282,7 @@ function usage($backup)
 {
 	fprintf(STDERR, "Secure FTP Backup - (C) Stephan Ferraro 2013 - Version ".$backup->VERSION."\n");
 	fprintf(STDERR, "usage: ".$GLOBALS['argv'][0]." ftp-backup.conf [ls]\n");
-	exit(1);	
+	exit(1);
 }
 
 // Check program arguments
